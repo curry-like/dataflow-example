@@ -3,23 +3,22 @@ package com.example
 import java.sql.Driver
 
 import com.spotify.scio.ScioContext
-import com.spotify.scio.jdbc.{JdbcConnectionOptions, _}
+import com.spotify.scio.jdbc.{ JdbcConnectionOptions, _ }
 import io.circe.generic.auto._
-import io.circe.parser.decode
-import org.joda.time.{DateTime, Duration}
+import io.circe.parser._
+import org.joda.time.{ DateTime, Duration }
 
 object CreditCardAlert {
 
   private[this] case class CreditUse(
-                        userId: Long,
-                      amount: Long,
-                      DateTime: DateTime,
-                      shopId: Long)
+    userId: Long,
+    amount: Long,
+    DateTime: String,
+    shopId: Long)
 
-  private[this] case class Shop(
-                               shopId: Long,
-                               location: String
-                               )
+  case class Shop(
+    shopId: Long,
+    location: String)
 
   def main(args: Array[String]): Unit = {
 
@@ -41,9 +40,9 @@ object CreditCardAlert {
     val shops = sc.jdbcSelect(getShops()(connOption))
       .keyBy(_.shopId)
 
-    sc.pubsubTopic[String]("")
+    sc.pubsubTopic[String](inputTopic)
       .withFixedWindows(Duration.standardMinutes(10))
-      .map {json =>
+      .map { json =>
         decode[CreditUse](json).right.get
       }
       .keyBy(_.shopId)
@@ -56,7 +55,7 @@ object CreditCardAlert {
       .map(_.head._1)
       .saveAsPubsub(outputTopic)
 
-    sc.close()
+    sc.close().waitUntilFinish()
   }
 
   def getShops()(connOptions: JdbcConnectionOptions): JdbcReadOptions[Shop] = ???
