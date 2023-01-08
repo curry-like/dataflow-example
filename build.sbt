@@ -7,7 +7,7 @@ import scalariform.formatter.preferences._
 val scioVersion = "0.5.5"
 val beamVersion = "2.4.0"
 val circeVersion = "0.9.3"
-val scalaMacrosVersion = "2.1.0"
+val scalaMacrosVersion = "2.1.1"
 
 
 lazy val commonSettings = Defaults.coreDefaultSettings ++ Seq(
